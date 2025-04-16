@@ -171,7 +171,7 @@ class TmuxTree(Tree):
             self.cursor_line = int(current_jump_label) - 1
 
     def on_mount(self) -> None:
-        self.guide_depth = 3
+        self.guide_depth = 4
         self.ICON_NODE = ''
         self.ICON_NODE_EXPANDED = ''
         self.show_root = False
