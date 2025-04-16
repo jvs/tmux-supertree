@@ -252,6 +252,25 @@ class TmuxTree(Tree):
             return
 
 
+class SearchInput(Input):
+    def on_key(self, event) -> None:
+        global search_term
+
+        if event.key == "escape":
+            event.stop()
+            self.visible = False
+            self.value = ""
+            search_term = ""
+
+    @on(Input.Changed)
+    def on_input_changed(self, event: Input.Changed) -> None:
+        global search_term
+        search_term = event.value
+
+        tree = self.app.query_one(TmuxTree)
+        tree._refresh()
+
+
 class MainApp(App):
     BINDINGS = [
         Binding(key="/", action="toggle_search", description="Search"),
@@ -263,7 +282,7 @@ class MainApp(App):
 
     def compose(self) -> ComposeResult:
         yield TmuxTree("Tmux Sessions")
-        yield Input(id="search_input", placeholder="Search...")
+        yield SearchInput(id="search_input", placeholder="Search...")
 
     def on_mount(self) -> None:
         if not start_in_search_mode:
@@ -274,22 +293,7 @@ class MainApp(App):
         global search_term
 
         if event.key == "escape":
-            search_input = self.query_one("#search_input")
-            if search_input.visible:
-                search_input.visible = False
-                search_input.value = ""
-                search_term = ""
-            else:
-                self.exit()
-            return
-
-    # @on(Input.Changed)
-    # def on_input_changed(self, event: Input.Changed) -> None:
-    #     global search_term
-    #     search_term = event.value
-    #
-    #     tree = self.query_one(TmuxTree)
-    #     tree._refresh()
+            self.exit()
 
     def action_toggle_search(self) -> None:
         """Toggle the search box visibility."""
