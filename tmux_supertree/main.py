@@ -419,10 +419,15 @@ class MainApp(App):
                     if window.id != target.id:
                         next_target = window
                         break
+                if next_target is not None:
+                    break
 
         self._handle_delete_target(target, next_target)
 
     def _handle_delete_target(self, target, next_target) -> None:
+        if next_target is None:
+            return
+
         cmds = []
 
         if next_target is not None:
