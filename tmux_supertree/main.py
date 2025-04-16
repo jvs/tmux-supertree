@@ -278,6 +278,10 @@ class SearchInput(Input):
             self.value = ""
             search_term = ""
 
+        if event.key == "enter":
+            event.stop()
+            self.app.exit()
+
     @on(Input.Changed)
     def on_input_changed(self, event: Input.Changed) -> None:
         global search_term
