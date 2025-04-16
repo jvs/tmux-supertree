@@ -191,7 +191,8 @@ class TmuxTree(Tree):
             jump_code += 1
             data.jump_code = jump_code
 
-            marked_name = _apply_fuzzy_markup(search_term, name)
+            parent_name = parent.data.name if parent.data else ""
+            marked_name = _apply_fuzzy_markup(search_term, parent_name, name)
             if marked_name:
                 name = marked_name
                 data.is_enabled = True
@@ -500,9 +501,18 @@ def _is_fuzzy_match(search_term, name):
     return False
 
 
-def _apply_fuzzy_markup(search_term, name):
+def _apply_fuzzy_markup(search_term, parent_name, name):
     if not search_term:
         return name
+
+    if "/" in search_term:
+        parent_search_term, search_term = search_term.split("/", 1)
+    else:
+        parent_search_term = None
+
+    if parent_name and parent_search_term:
+        if not _is_fuzzy_match(parent_search_term, parent_name):
+            return None
 
     i = 0
     search_term = search_term.lower().replace(" ", "")
