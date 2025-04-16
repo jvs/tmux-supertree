@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import time
 
@@ -6,7 +7,6 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Tree, Label, Input
 from textual.containers import Container
-from textual.screen import ModalScreen
 
 from . import tmux
 from .confirmation_modal import ConfirmationModal
@@ -16,6 +16,8 @@ initial_session_id = None
 initial_window_id = None
 current_tree_node = None
 
+command_file = None
+return_command = None
 start_in_search_mode = False
 search_term = ""
 show_numbers = False
@@ -38,6 +40,7 @@ class TmuxTree(Tree):
         Binding(key="g", action="toggle_guides", description="Toggle guides"),
         Binding(key="n", action="toggle_numbers", description="Toggle numbers"),
         Binding(key="e", action="toggle_panes", description="Toggle panes"),
+        Binding(key="a", action="add_window", description="Add window"),
         Binding(key="d", action="delete_target", description="Delete target"),
         Binding(key="r", action="rename_target", description="Rename target"),
         Binding(key="enter", action="make_selection", description="Make selection", show=False),
@@ -100,6 +103,13 @@ class TmuxTree(Tree):
             subprocess.run(['tmux', 'switch-client', '-t', target.id])
 
         self.app.exit()
+
+    def action_add_window(self) -> None:
+        modal = InputModal(
+            placeholder="New window name",
+            callback=self.app.handle_add_window,
+        )
+        self.app.push_screen(modal)
 
     def action_delete_target(self) -> None:
         if current_tree_node is None:
@@ -282,6 +292,26 @@ class MainApp(App):
             search_input.value = ""
             search_input.focus()
 
+    def handle_add_window(self, name: str) -> None:
+        if current_tree_node is None:
+            return
+
+        target = current_tree_node.data
+        position = 'b' if isinstance(target, tmux.TmuxSession) else 'a'
+
+        if command_file:
+            with open(command_file, "w") as f:
+                f.write(
+                    "tmux new-window"
+                    f" -{position}"
+                    f" -t '{target.id}'"
+                    f" -n '{name}'"
+                    " -c '#{pane_current_path}'\n"
+                )
+                if return_command:
+                    f.write(return_command)
+                self.exit()
+
     def handle_rename(self, name: str) -> None:
         if current_tree_node is None:
             return
@@ -299,6 +329,7 @@ class MainApp(App):
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             self.log(f"Error renaming target: {e}")
+            return
 
         tree = self.query_one(TmuxTree)
         tree._refresh()
@@ -494,7 +525,16 @@ def _set_initial_session_and_window():
 
 
 if __name__ == "__main__":
-    start_in_search_mode = False
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--command-file')
+    parser.add_argument('--return-command')
+    parser.add_argument('--search-mode', action='store_true')
+    args = parser.parse_args()
+
+    start_in_search_mode = args.search_mode
+    command_file = args.command_file
+    return_command = args.return_command
+
     _set_initial_session_and_window()
     app = MainApp()
     app.run()
