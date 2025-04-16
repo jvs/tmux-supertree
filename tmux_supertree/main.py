@@ -23,6 +23,7 @@ search_term = ""
 show_numbers = False
 show_panes = False
 show_guides = True
+show_hidden_sessions = False
 
 
 JUMP_TIMEOUT = 0.5
@@ -39,6 +40,7 @@ class TmuxTree(Tree):
         Binding(key="k", action="move_up", description="Move Cursor Up", show=False),
         Binding(key="g", action="toggle_guides", description="Toggle guides"),
         Binding(key="n", action="toggle_numbers", description="Toggle numbers"),
+        Binding(key="h", action="toggle_hidden_sessions", description="Toggle hidden sessions"),
         Binding(key="e", action="toggle_panes", description="Toggle panes"),
         Binding(key="a", action="add_window", description="Add window"),
         Binding(key="d", action="delete_target", description="Delete target"),
@@ -62,6 +64,11 @@ class TmuxTree(Tree):
     def action_toggle_numbers(self) -> None:
         global show_numbers
         show_numbers = not show_numbers
+        self._refresh()
+
+    def action_toggle_hidden_sessions(self) -> None:
+        global show_hidden_sessions
+        show_hidden_sessions = not show_hidden_sessions
         self._refresh()
 
     def action_toggle_panes(self) -> None:
@@ -204,6 +211,9 @@ class TmuxTree(Tree):
             return parent.add(label, data=data)
 
         for session in tmux_sessions:
+            if not show_hidden_sessions and session.name.startswith('__'):
+                continue
+
             session_node = add(self.root, session.name, session)
 
             for window in session.windows:
