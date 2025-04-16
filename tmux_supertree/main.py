@@ -25,6 +25,8 @@ show_panes = False
 show_guides = True
 show_hidden_sessions = False
 
+focus_on_session = None
+
 
 JUMP_TIMEOUT = 0.5
 current_jump_label = None
@@ -41,6 +43,7 @@ class TmuxTree(Tree):
         Binding(key="g", action="toggle_guides", description="Toggle guides"),
         Binding(key="n", action="toggle_numbers", description="Toggle numbers"),
         Binding(key="h", action="toggle_hidden_sessions", description="Toggle hidden sessions"),
+        Binding(key="s", action="toggle_other_sessions", description="Toggle sessions"),
         Binding(key="e", action="toggle_panes", description="Toggle panes"),
         Binding(key="a", action="add_window", description="Add window"),
         Binding(key="d", action="delete_target", description="Delete target"),
@@ -69,6 +72,15 @@ class TmuxTree(Tree):
     def action_toggle_hidden_sessions(self) -> None:
         global show_hidden_sessions
         show_hidden_sessions = not show_hidden_sessions
+        self._refresh()
+
+    def action_toggle_other_sessions(self) -> None:
+        # TODO: Fix the currently highlighted node.
+        global focus_on_session
+        if focus_on_session is None and current_tree_node is not None:
+            focus_on_session = tmux.get_session_id(current_tree_node.data)
+        else:
+            focus_on_session = None
         self._refresh()
 
     def action_toggle_panes(self) -> None:
@@ -213,6 +225,9 @@ class TmuxTree(Tree):
 
         for session in tmux_sessions:
             if not show_hidden_sessions and session.name.startswith('__'):
+                continue
+
+            if focus_on_session is not None and session.id != focus_on_session:
                 continue
 
             session_node = add(self.root, session.name, session)
