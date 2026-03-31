@@ -428,10 +428,14 @@ class MainApp(App):
         if next_target is None:
             return
 
-        cmds = []
+        if isinstance(target, tmux.TmuxSession):
+            next_target_id = next_target.id
+        elif isinstance(target, tmux.TmuxWindow):
+            next_target_id = f"{next_target.session_id}:{next_target.id}"
+        else:
+            next_target_id = f"{target.session_id}:{target.window_id}"
 
-        if next_target is not None:
-            cmds.append(["tmux", "switch-client", "-t", next_target.id])
+        cmds = [["tmux", "switch-client", "-t", next_target_id]]
 
         command_names = {
             tmux.TmuxSession: "kill-session",
