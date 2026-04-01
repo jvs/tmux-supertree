@@ -433,6 +433,7 @@ func (m Model) View() string {
 	}
 
 	var lines []string
+	lines = append(lines, "")
 	for i, item := range m.items {
 		lines = append(lines, m.renderItem(i, item))
 	}
@@ -475,10 +476,10 @@ func (m Model) renderItem(i int, item Item) string {
 		if m.showNumbers {
 			numPrefix = fmt.Sprintf("%d: ", item.JumpCode)
 		}
-		plain := "  " + prefix + numPrefix + item.Name
+		plain := "   " + prefix + numPrefix + item.Name
 		return lipgloss.NewStyle().Background(lipgloss.Color("237")).Width(m.width).Render(plain)
 	}
-	return "  " + prefix + item.Label
+	return "   " + prefix + item.Label
 }
 
 // buildItems rebuilds the flat visible item list from current model state.
