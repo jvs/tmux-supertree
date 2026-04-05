@@ -77,6 +77,7 @@ type Model struct {
 	commandFile   string
 	returnCommand string
 	switchCommand string
+	visitCommand  string
 
 	history []HistoryEntry
 
@@ -90,7 +91,7 @@ var (
 	numberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 )
 
-func newModel(initialSessID, initialWinID, commandFile, returnCommand, switchCommand string, searchMode bool) Model {
+func newModel(initialSessID, initialWinID, commandFile, returnCommand, switchCommand, visitCommand string, searchMode bool) Model {
 	m := Model{
 		showGuides:    true,
 		initialSessID: initialSessID,
@@ -98,6 +99,7 @@ func newModel(initialSessID, initialWinID, commandFile, returnCommand, switchCom
 		commandFile:   commandFile,
 		returnCommand: returnCommand,
 		switchCommand: switchCommand,
+		visitCommand:  visitCommand,
 		searchMode:    searchMode,
 		width:         80,
 		height:        24,
@@ -214,6 +216,9 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, m.switchToCurrentCmd()
 
 	case "enter":
+		if m.visitCommand != "" && m.commandFile != "" {
+			os.WriteFile(m.commandFile, []byte(m.visitCommand+"\n"), 0644)
+		}
 		return m, tea.Quit
 
 	case "esc", "alt+o":
