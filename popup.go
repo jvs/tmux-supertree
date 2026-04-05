@@ -9,14 +9,14 @@ import (
 
 const commandFile = "/tmp/tmux_supertree_command"
 
-func cmdShowPopup(switchCommand string) error {
+func cmdShowPopup(switchCommand, visitCommand string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		exe = "tmux-supertree"
 	}
 
 	scriptPath := "/tmp/tmux_supertree_popup.sh"
-	if err := writePopupScript(scriptPath, exe, switchCommand); err != nil {
+	if err := writePopupScript(scriptPath, exe, switchCommand, visitCommand); err != nil {
 		return fmt.Errorf("writing popup script: %w", err)
 	}
 
@@ -37,11 +37,14 @@ func cmdShowPopup(switchCommand string) error {
 
 // writePopupScript writes the shell script that tmux runs inside the popup.
 // It calls `tmux-supertree show-body` with the appropriate flags.
-func writePopupScript(path, exe, switchCommand string) error {
+func writePopupScript(path, exe, switchCommand, visitCommand string) error {
 	cmd := fmt.Sprintf("exec %s show-body --command-file %s --return-command %q",
 		exe, commandFile, exe+" show")
 	if switchCommand != "" {
 		cmd += fmt.Sprintf(" --switch-command %q", switchCommand)
+	}
+	if visitCommand != "" {
+		cmd += fmt.Sprintf(" --visit-command %q", visitCommand)
 	}
 	body := "#!/bin/sh\n" + cmd + "\n"
 	if err := os.WriteFile(path, []byte(body), 0644); err != nil {

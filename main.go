@@ -26,13 +26,14 @@ func main() {
 	// Default (no args, "show", or flags): open the popup.
 	fs := flag.NewFlagSet("tmux-supertree", flag.ExitOnError)
 	switchCommand := fs.String("switch-command", "", "command to write to the command file when switching to another tool")
+	visitCommand  := fs.String("visit-command",  "", "execute this command when the user presses enter to confirm selection")
 	args := os.Args[1:]
 	if len(args) > 0 && args[0] == "show" {
 		args = args[1:]
 	}
 	fs.Parse(args) //nolint:errcheck
 
-	if err := cmdShowPopup(*switchCommand); err != nil {
+	if err := cmdShowPopup(*switchCommand, *visitCommand); err != nil {
 		fmt.Fprintf(os.Stderr, "tmux-supertree: %v\n", err)
 		os.Exit(1)
 	}
